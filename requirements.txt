@@ -1,0 +1,16 @@
+# core pins (stay on NumPy 1.x)
+numpy==1.26.4
+torch==2.2.2          # if this wheel fails on mac, use 2.1.2
+opencv-python-headless==4.10.0.84
+
+# app deps
+openai-whisper==20231117
+pytesseract==0.3.10
+Pillow==10.4.0
+rapidfuzz==3.9.6
+streamlit==1.36.0
+yt-dlp==2024.8.6
+ffmpeg-python==0.2.0
+regex==2024.5.15
+python-dotenv==1.0.1
+certifi==2024.8.30

@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Virtual env
+.venv/
+
+# OS / IDE junk
+.DS_Store
+.vscode/
+.idea/
+
+# App artifacts
+artifacts/
+*.mp4
+*.wav
+frames/
+cache/
+.whisper_cache/
+*.pdf
+
+# Credentials (never commit)
+.env
+*cookies*.txt

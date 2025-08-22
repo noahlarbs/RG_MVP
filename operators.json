@@ -1,0 +1,93 @@
+{
+  "bovada": {
+    "type": "offshore",
+    "min_age": 18,
+    "notes": [
+      "Cease-and-desists in multiple US states"
+    ],
+    "aliases": [
+      "bovada.lv"
+    ]
+  },
+  "stake": {
+    "type": "offshore",
+    "min_age": 18,
+    "notes": [
+      ".com unlicensed in US"
+    ],
+    "aliases": [
+      "stake.com"
+    ]
+  },
+  "roobet": {
+    "type": "offshore",
+    "min_age": 18,
+    "notes": [],
+    "aliases": [
+      "roobet.com"
+    ]
+  },
+  "rainbet": {
+    "type": "offshore",
+    "min_age": 18,
+    "notes": [],
+    "aliases": [
+      "rainbet"
+    ]
+  },
+  "rollbit": {
+    "type": "offshore",
+    "min_age": 18,
+    "notes": [],
+    "aliases": [
+      "rollbit.com"
+    ]
+  },
+  "fliff": {
+    "type": "sweepstakes",
+    "min_age": 18,
+    "notes": [
+      "sweepstakes sports"
+    ],
+    "aliases": [
+      "fliff.com"
+    ]
+  },
+  "stake.us": {
+    "type": "sweepstakes",
+    "min_age": 21,
+    "notes": [
+      "social casino"
+    ],
+    "aliases": [
+      "stake.us"
+    ]
+  },
+  "draftkings": {
+    "type": "licensed",
+    "min_age": 21,
+    "notes": [],
+    "aliases": [
+      "dk",
+      "draft kings",
+      "dk sportsbook"
+    ]
+  },
+  "fanduel": {
+    "type": "licensed",
+    "min_age": 21,
+    "notes": [],
+    "aliases": [
+      "fan duel",
+      "fd sportsbook"
+    ]
+  },
+  "betmgm": {
+    "type": "licensed",
+    "min_age": 21,
+    "notes": [],
+    "aliases": [
+      "bet mgm"
+    ]
+  }
+}
