@@ -6,6 +6,7 @@ A fast, local-first prototype that ingests **YouTube Shorts** (or uploaded .mp4)
 - Input: YouTube URL **or** upload .mp4
 - Pipeline: ffmpeg → Whisper (ASR) → Tesseract OCR → rule-based flags → scoring
 - Output: Overall risk score (0–100), category breakdown, flags, transcript, OCR text, representative frames.
+- Ready-to-run in GitHub Codespaces via the included devcontainer
 
 ## Install
 
