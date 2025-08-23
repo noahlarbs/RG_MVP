@@ -1,15 +1,13 @@
 {
-  "name": "RGShorts MVP",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "name": "RG_MVP",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
-  "forwardPorts": [8000],
+  "forwardPorts": [8501],
   "customizations": {
     "vscode": {
-      "extensions": [
-        "ms-python.python",
-        "ms-toolsai.jupyter",
-        "ms-python.vscode-pylance"
-      ]
+      "extensions": ["ms-python.python"]
     }
   }
 }
