@@ -170,6 +170,10 @@ def run_ocr_on_frames(frames):
             txt = _ocr_one_image(Image.open(frames[i]))
             if txt:
                 texts.append(txt)
+        except pytesseract.TesseractNotFoundError as e:
+            raise RuntimeError(
+                "Tesseract OCR executable not found. Install 'tesseract-ocr' to enable OCR processing"
+            ) from e
         except Exception:
             pass
     return "\n".join(texts)
