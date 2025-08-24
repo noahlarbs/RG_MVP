@@ -26,26 +26,32 @@ pip install -r requirements.txt
 
 ## Run
 
-1. In Chrome, install a "cookies.txt" exporter and export cookies for youtube.com to `~/youtube_cookies.txt`.
-2. In your venv terminal before launching the app:
+YouTube may respond with **"Sign in to confirm you're not a bot"** unless `yt-dlp` uses your own authenticated cookies.
 
+1. On your local machine, install a *cookies.txt* exporter in Chrome/Firefox and export cookies for `youtube.com` to a file (e.g., `youtube_cookies.txt`).
+2. Copy this file into the codespace (VS Code → *Explorer* → **Upload**…).
+3. In your venv terminal before launching the app:
 
 ```bash
-export YTDLP_COOKIES=~/youtube_cookies.txt
-unset YTDLP_BROWSER
+export YTDLP_COOKIES=/workspaces/RG_MVP/youtube_cookies.txt  # adjust path
+unset YTDLP_BROWSER                                          # don't look for a browser profile
 streamlit run app.py
 ```
 
-Then paste a **YouTube Shorts** URL, or upload a short `.mp4`.
+Paste a **YouTube Shorts** URL or upload a short `.mp4`.
+
+If the cookies expire and the bot-check message returns, re-export and replace the file.
 
 ### Download clips without running the app
 
-Use `download_clip.py` to fetch a YouTube video (or audio-only) as a local file:
+Use `download_clip.py` to fetch a YouTube video (or audio-only) as a local file. Supply the same cookie file or rely on `YTDLP_COOKIES`:
 
 ```bash
-python download_clip.py "https://www.youtube.com/watch?v=abc123"
+python download_clip.py "https://www.youtube.com/watch?v=abc123" --cookies /workspaces/RG_MVP/youtube_cookies.txt
+# or, if YTDLP_COOKIES is already set:
 python download_clip.py "https://www.youtube.com/watch?v=abc123" --audio-only
 ```
+
 
 ### GitHub Codespaces
 
