@@ -59,10 +59,24 @@ python download_clip.py "https://www.youtube.com/watch?v=abc123" --audio-only
 This repo includes a [devcontainer](.devcontainer) that installs `ffmpeg`, `tesseract-ocr`, and the Python requirements automatically. Open in Codespaces and you're ready to run `streamlit`.
 ```
 
+## Dataset labeling and training
+
+Use the helper script to build a labeled transcript/OCR dataset:
+
+```bash
+python scripts/label_dataset.py path/to/video.mp4 dataset.jsonl
+```
+
+Fine-tune a multi-label classifier on the collected data:
+
+```bash
+python models/transcript_classifier.py dataset.jsonl model_out_dir --epochs 3
+```
+
 ## Notes
-- This is a **rules-first** MVP. You can later fine-tune a small transformer on labeled transcripts+OCR.
+- This is a **rules-first** MVP with additional semantic phrase matching and optional logo detection.
 - `operators.json` seeds offshore/sweepstakes/licensed names for detection.
-- `flags.py` holds the regexes; tune them as you observe false positives/negatives.
+- `flags.py` holds regexes and embedding-based phrase matchers; tune them as you observe false positives/negatives.
 - For Instagram Reels, use the **Instagram Graph API** hashtag search to fetch public media metadata and (when available) `media_url`. This demo focuses on YouTube for speed.
 
 ## Roadmap
