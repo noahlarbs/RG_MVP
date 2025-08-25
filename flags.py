@@ -3,6 +3,8 @@ from typing import List, Dict, Set, Tuple
 
 #for near misses and stuff
 from rapidfuzz import fuzz, process
+from sentence_transformers import SentenceTransformer, util
+import torch
 
 
 # Regex patterns for transcript/OCR hits
@@ -22,6 +24,7 @@ PATTERNS = {
     "helpline": re.compile(r"(1[-\s]*800[-\s]*GAMBLER|GAMBLER)", re.I),
     "age21": re.compile(r"(21\+|must\s*be\s*21)", re.I),
     "promo_terms": re.compile(r"(terms|wager\s*requirement|min(imum)?\s*odds|playthrough|rollover)", re.I),
+    "offshore_domain": re.compile(r"\b(?:stake\.com|roobet\.com|rainbet\.com|bovada\.(lv|ag)|[a-z0-9-]+\.(ag|lv|ph))\b", re.I),
 
     "wage_wager": re.compile(r"\b(paycheck|pay\s*check|my\s*(tips?|wages?|pay)|what\s+i\s+made?\s+(today|at\s*work)|my\s+shift\s+money)\b", re.I),
     "driving_phr": re.compile(r"\b(while\s*driving|drive\s+and\s+gambl(e|ing)|behind\s+the\s+wheel)\b", re.I),
@@ -62,4 +65,45 @@ def fuzzy_hits(text: str, threshold: int = 85) -> Set[str]:
             if fuzz.partial_ratio(ph.lower(), base) >= threshold:
                 fired.add(key)
                 break
+    return fired
+
+
+# Embedding-based phrase matcher to capture semantic paraphrases
+EMBED_MODEL: SentenceTransformer | None = None
+PHRASE_EMBEDS: Dict[str, 'torch.Tensor'] = {}
+EMBED_PHRASES = {
+    "chasing_losses": [
+        "try to win back losses",
+        "recover what you lost",
+        "double down to recover",
+    ],
+    "risk_free": [
+        "can't lose",
+        "no risk betting",
+    ],
+    "solve_financial_problems": [
+        "pay off debt with gambling",
+        "cover bills from bets",
+    ],
+}
+
+
+def _get_embed_model() -> SentenceTransformer:
+    global EMBED_MODEL
+    if EMBED_MODEL is None:
+        EMBED_MODEL = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    return EMBED_MODEL
+
+
+def embedding_hits(text: str, threshold: float = 0.7) -> Set[str]:
+    """Return labels whose phrases are semantically similar to ``text``."""
+    model = _get_embed_model()
+    text_emb = model.encode(text, convert_to_tensor=True)
+    fired: Set[str] = set()
+    for label, phrases in EMBED_PHRASES.items():
+        if label not in PHRASE_EMBEDS:
+            PHRASE_EMBEDS[label] = model.encode(phrases, convert_to_tensor=True)
+        sims = util.cos_sim(text_emb, PHRASE_EMBEDS[label])
+        if float(sims.max()) >= threshold:
+            fired.add(label)
     return fired

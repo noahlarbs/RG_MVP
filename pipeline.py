@@ -8,18 +8,15 @@ import pytesseract
 from PIL import Image
 import whisper
 from yt_dlp import YoutubeDL
-#imports for flags
-from flags import find_hits, PATTERNS,  fuzzy_hits
+# imports for flags
+from flags import find_hits, PATTERNS, fuzzy_hits, embedding_hits
 from scorer import score_clip
-#imports for OCR
+# imports for OCR and detection
 import uuid
-
 import shutil
-
 import cv2
 import numpy as np
-import pytesseract
-from PIL import Image
+from logo_detector import LogoDetector
 
 
 ARTIFACTS_DIR = Path(__file__).resolve().parent / "artifacts"
@@ -31,14 +28,8 @@ with open(os.path.join(os.path.dirname(__file__), "operators.json"), "r") as f:
     OPERATORS = json.load(f)
 
 # Initialize once (lazy in real app)
-_OCR = None
 _ASR = None
-
-def _get_ocr():
-    global _OCR
-    if _OCR is None:
-        _OCR = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
-    return _OCR
+_LOGO = None
 
 def _get_asr():
     global _ASR
@@ -46,6 +37,16 @@ def _get_asr():
         # try "small" if your machine can handle; else keep "base"
         _ASR = whisper.load_model(os.environ.get("WHISPER_MODEL", "base"))
     return _ASR
+
+
+def _get_logo_detector():
+    global _LOGO
+    if _LOGO is None:
+        try:
+            _LOGO = LogoDetector()
+        except Exception:
+            _LOGO = False  # sentinel for unavailable
+    return _LOGO or None
 
 
 def download_youtube(url: str, out_dir: str) -> str:
@@ -160,10 +161,10 @@ def _ocr_one_image(pil_img: Image.Image) -> str:
 
 def run_ocr_on_frames(frames):
     texts = []
-    # OCR only the first ~5 seconds & a couple mid/last frames to save time
+    # Bias sampling toward the first 10 seconds plus mid/last frames
     sample_ids = set()
     for i, f in enumerate(frames):
-        if i < 6 or i in (len(frames)//2, len(frames)-1):
+        if i < 10 or i in (len(frames)//2, len(frames)-1):
             sample_ids.add(i)
     for i in sorted(sample_ids):
         try:
@@ -194,25 +195,33 @@ def detect_operators(text: str) -> Set[str]:
                 break
     return found
 
-def build_features(transcript: str, ocr_text: str, metadata: Dict[str,Any] = None) -> Dict[str,Any]:
+def build_features(transcript: str, ocr_text: str, metadata: Dict[str,Any] = None, logos: Set[str] | None = None) -> Dict[str,Any]:
     transcript_n = normalize(transcript)
     ocr_n = normalize(ocr_text)
     joined = f"{transcript_n}\n{ocr_n}"
 
     hits = find_hits(joined)
-        # Fuzzy phrase backstop (handles ASR/OCR imperfections)
+    # Fuzzy phrase backstop (handles ASR/OCR imperfections)
     fuzzy = set()
     try:
-        from flags import fuzzy_hits
         fuzzy = fuzzy_hits(joined, threshold=82)  # a bit lenient for Shorts
     except Exception:
         pass
+    emb = set()
+    try:
+        emb = embedding_hits(joined)
+    except Exception:
+        pass
 
-    phrases = set(hits.keys()) | fuzzy
+    phrases = set(hits.keys()) | fuzzy | emb
+
+    operators = detect_operators(joined)
+    if logos:
+        operators |= logos
 
     features = {
         "phrases": phrases,
-        "operators": list(detect_operators(joined)),
+        "operators": list(operators),
         "has_helpline": bool(hits.get("helpline")),
         "has_21plus": bool(hits.get("age21")),
         "has_promo_terms": bool(hits.get("promo_terms")),
@@ -224,7 +233,7 @@ def build_features(transcript: str, ocr_text: str, metadata: Dict[str,Any] = Non
         # Undisclosed affiliate: saw promo code but not #ad/#sponsored in transcript/ocr/meta
         "affiliate_undisclosed": ("promo" in phrases) and not re.search(r"#(ad|sponsored)\b", joined, re.I),
         # YouTube unapproved ref heuristic (placeholder): operator is offshore and promo mentioned
-        "unapproved_ref": (len(detect_operators(joined) & {"bovada","stake","roobet","rainbet","rollbit"})>0) and ("promo" in phrases),
+        "unapproved_ref": (len(operators & {"bovada","stake","roobet","rainbet","rollbit"})>0) and ("promo" in phrases),
     }
     return features, hits
 
@@ -237,7 +246,14 @@ def process_video_file(video_path: str) -> Dict[str,Any]:
         frames = extract_frames(temp_video, tdir, fps=1)
         transcript = run_asr(audio)
         ocr_text = run_ocr_on_frames(frames)
-        features, hits = build_features(transcript, ocr_text, {})
+        logos = set()
+        detector = _get_logo_detector()
+        if detector:
+            try:
+                logos = detector.detect(frames)
+            except Exception:
+                logos = set()
+        features, hits = build_features(transcript, ocr_text, {}, logos=logos)
         overall, cats, flags = score_clip(features)
 
         # pick representative frames (first, middle, last)
@@ -266,6 +282,7 @@ def process_video_file(video_path: str) -> Dict[str,Any]:
             "hits": hits,
             "transcript": transcript,
             "ocr_text": ocr_text,
+            "logos": list(logos),
             "rep_frames": reps,
         }
 
