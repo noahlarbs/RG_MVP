@@ -73,11 +73,39 @@ Tune multi label classifier on the collected data:
 python models/transcript_classifier.py dataset.jsonl model_out_dir --epochs 3
 ```
 
+## Dataset labeling and training
+
+Use the helper script to build a labeled transcript/OCR dataset:
+
+```bash
+python scripts/label_dataset.py path/to/video.mp4 dataset.jsonl [--fast]
+```
+
+`--fast` skips embedding and logo models to make annotation quicker.
+
+Fine-tune a multi-label classifier on the collected data:
+
+```bash
+python models/transcript_classifier.py dataset.jsonl model_out_dir --epochs 3
+```
+
 ## Notes
+
+- This is a **rules-first** MVP with additional semantic phrase matching and optional logo detection.
+- `operators.json` seeds offshore/sweepstakes/licensed names for detection.
+- `flags.py` holds regexes and embedding-based phrase matchers; tune them as you observe false positives/negatives.
+- For Instagram Reels, use the **Instagram Graph API** hashtag search to fetch public media metadata and (when available) `media_url`. This demo focuses on YouTube for speed.
+
+## Roadmap
+- Evidence PDF export with screenshots + policy citations
+- CLIP logo matching and in-car scene classifier
+- Instagram ingest via Graph API
+=======
 - This is a MVP with  semantic phrase matching and some logo detection, currently working on addig data to train the model via label_dataset.
 - `operators.json` seeds offshore/sweepstakes/licensed names for detection
 - `flags.py` holds regexes and embedding based phrase matchers; tune  as you observe false positives/negatives.
 - For Reels, can potentially use the **Instagram Graph API** hashtag search to fetch public media metadata and (when available) `media_url`. 
 
 ## Current Proj Goals
+
 - Train a DistilBERT text classifier on labeled clips

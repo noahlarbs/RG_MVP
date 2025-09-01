@@ -195,7 +195,15 @@ def detect_operators(text: str) -> Set[str]:
                 break
     return found
 
-def build_features(transcript: str, ocr_text: str, metadata: Dict[str,Any] = None, logos: Set[str] | None = None) -> Dict[str,Any]:
+
+def build_features(
+    transcript: str,
+    ocr_text: str,
+    metadata: Dict[str, Any] = None,
+    logos: Set[str] | None = None,
+    use_embed: bool = True,
+) -> Dict[str, Any]:
+
     transcript_n = normalize(transcript)
     ocr_n = normalize(ocr_text)
     joined = f"{transcript_n}\n{ocr_n}"
@@ -208,10 +216,13 @@ def build_features(transcript: str, ocr_text: str, metadata: Dict[str,Any] = Non
     except Exception:
         pass
     emb = set()
-    try:
-        emb = embedding_hits(joined)
-    except Exception:
-        pass
+
+    if use_embed:
+        try:
+            emb = embedding_hits(joined)
+        except Exception:
+            pass
+
 
     phrases = set(hits.keys()) | fuzzy | emb
 
@@ -237,7 +248,7 @@ def build_features(transcript: str, ocr_text: str, metadata: Dict[str,Any] = Non
     }
     return features, hits
 
-def process_video_file(video_path: str) -> Dict[str,Any]:
+def process_video_file(video_path: str, use_embed: bool = True, use_logos: bool = True) -> Dict[str,Any]:
     with tempfile.TemporaryDirectory() as tdir:
         # copy to temp
         temp_video = os.path.join(tdir, "video.mp4")
@@ -247,13 +258,16 @@ def process_video_file(video_path: str) -> Dict[str,Any]:
         transcript = run_asr(audio)
         ocr_text = run_ocr_on_frames(frames)
         logos = set()
-        detector = _get_logo_detector()
-        if detector:
-            try:
-                logos = detector.detect(frames)
-            except Exception:
-                logos = set()
-        features, hits = build_features(transcript, ocr_text, {}, logos=logos)
+
+        if use_logos:
+            detector = _get_logo_detector()
+            if detector:
+                try:
+                    logos = detector.detect(frames)
+                except Exception:
+                    logos = set()
+        features, hits = build_features(transcript, ocr_text, {}, logos=logos if use_logos else None, use_embed=use_embed)
+
         overall, cats, flags = score_clip(features)
 
         # pick representative frames (first, middle, last)

@@ -1,21 +1,24 @@
 from typing import Dict, Tuple, List
 
+# Exposed weights so other modules (e.g., dataset labeling) know which flags exist
+WEIGHTS: Dict[str, int] = {
+    # Claims
+    "risk_free": 30, "guaranteed": 25, "free_but_risky": 30,
+    "chasing_losses": 18, "solve_financial_problems": 15, "misrep_odds": 12,
+    # Age
+    "youth_context": 22, "college_cues": 22, "under21_endorser": 25,
+    # RG messaging
+    "missing_helpline": 12, "missing_21plus": 10, "missing_terms": 10,
+    # Offshore / availability
+    "offshore_brand": 22, "vpn_proxy": 10, "unapproved_ref": 18,
+    # Dangerous behavior
+    "danger_driving": 15, "socially_irresponsible": 10, "wage_wager": 12,
+    # Endorsements
+    "undisclosed_affiliate": 12,
+}
+
 def score_clip(features: Dict) -> Tuple[int, Dict[str,int], List[Tuple[str,str]]]:
-    weights = {
-        # Claims
-        "risk_free": 30, "guaranteed": 25, "free_but_risky": 30,
-        "chasing_losses": 18, "solve_financial_problems": 15, "misrep_odds": 12,
-        # Age
-        "youth_context": 22, "college_cues": 22, "under21_endorser": 25,
-        # RG messaging
-        "missing_helpline": 12, "missing_21plus": 10, "missing_terms": 10,
-        # Offshore / availability
-        "offshore_brand": 22, "vpn_proxy": 10, "unapproved_ref": 18,
-        # Dangerous behavior
-        "danger_driving": 15, "socially_irresponsible": 10, "wage_wager": 12,
-        # Endorsements
-        "undisclosed_affiliate": 12,
-    }
+    weights = WEIGHTS
 
     flags = []
     s_cat = {"age":0,"claims":0,"rgmsg":0,"offshore":0,"danger":0,"endorse":0}

@@ -5,28 +5,41 @@ from typing import Dict, List
 
 from pipeline import process_video_file
 
-LABELS = [
-    "missing_disclaimer",
-    "offshore_reference",
-    "risk_free",
-    "chasing_losses",
-    "solve_financial_problems",
-    "vpn_proxy",
-]
+from scorer import WEIGHTS
 
-def label_video(video: str, out_file: Path) -> None:
+# Use flags defined in scorer to keep labeling options in sync
+LABELS = sorted(WEIGHTS.keys())
+
+def _summarize_ocr(text: str, operators: List[str]) -> str:
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    keywords = [op.lower() for op in operators] + ["21", "gambl", "stake", "rainbet", "bovada", "roobet"]
+    key_lines = [ln for ln in lines if any(k in ln.lower() for k in keywords)]
+    return "\n".join(key_lines[:10])
+
+
+def label_video(video: str, out_file: Path, fast: bool = False) -> None:
     """Process a video and prompt the user for RG flags.
 
     The transcript and OCR text are printed to the console so the annotator can
     make a decision without watching the full video.
     """
-    result = process_video_file(video)
+
+    result = process_video_file(video, use_embed=not fast, use_logos=not fast)
     transcript = result.get("transcript", "")
     ocr_text = result.get("ocr_text", "")
+    operators = result.get("features", {}).get("operators", [])
+    hits = result.get("hits", {})
 
     print("\n=== Transcript ===\n", transcript)
     if ocr_text:
-        print("\n=== OCR Text ===\n", ocr_text)
+        summary = _summarize_ocr(ocr_text, operators)
+        if summary:
+            print("\n=== OCR Snippets ===\n", summary)
+    if operators:
+        print("\nDetected operators:", ", ".join(sorted(operators)))
+    if hits:
+        print("Detected phrases:", ", ".join(sorted(hits.keys())))
+
 
     print("\nEnter comma-separated flags from:\n" + ", ".join(LABELS))
     raw = input("flags> ").strip()
@@ -51,8 +64,9 @@ def main() -> None:
     p = argparse.ArgumentParser(description="Label a video for RG violations")
     p.add_argument("video", help="Path to mp4 file")
     p.add_argument("out", help="Path to output JSONL file")
+    p.add_argument("--fast", action="store_true", help="Skip heavy embed and logo models for speed")
     args = p.parse_args()
-    label_video(args.video, Path(args.out))
+    label_video(args.video, Path(args.out), fast=args.fast)
 
 
 if __name__ == "__main__":
