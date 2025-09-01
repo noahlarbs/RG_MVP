@@ -195,6 +195,7 @@ def detect_operators(text: str) -> Set[str]:
                 break
     return found
 
+
 def build_features(
     transcript: str,
     ocr_text: str,
@@ -202,6 +203,7 @@ def build_features(
     logos: Set[str] | None = None,
     use_embed: bool = True,
 ) -> Dict[str, Any]:
+
     transcript_n = normalize(transcript)
     ocr_n = normalize(ocr_text)
     joined = f"{transcript_n}\n{ocr_n}"
@@ -214,11 +216,13 @@ def build_features(
     except Exception:
         pass
     emb = set()
+
     if use_embed:
         try:
             emb = embedding_hits(joined)
         except Exception:
             pass
+
 
     phrases = set(hits.keys()) | fuzzy | emb
 
@@ -254,6 +258,7 @@ def process_video_file(video_path: str, use_embed: bool = True, use_logos: bool 
         transcript = run_asr(audio)
         ocr_text = run_ocr_on_frames(frames)
         logos = set()
+
         if use_logos:
             detector = _get_logo_detector()
             if detector:
@@ -262,6 +267,7 @@ def process_video_file(video_path: str, use_embed: bool = True, use_logos: bool 
                 except Exception:
                     logos = set()
         features, hits = build_features(transcript, ocr_text, {}, logos=logos if use_logos else None, use_embed=use_embed)
+
         overall, cats, flags = score_clip(features)
 
         # pick representative frames (first, middle, last)

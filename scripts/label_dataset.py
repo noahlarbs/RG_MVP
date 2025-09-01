@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from pipeline import process_video_file
+
 from scorer import WEIGHTS
 
 # Use flags defined in scorer to keep labeling options in sync
@@ -22,6 +23,7 @@ def label_video(video: str, out_file: Path, fast: bool = False) -> None:
     The transcript and OCR text are printed to the console so the annotator can
     make a decision without watching the full video.
     """
+
     result = process_video_file(video, use_embed=not fast, use_logos=not fast)
     transcript = result.get("transcript", "")
     ocr_text = result.get("ocr_text", "")
@@ -37,6 +39,7 @@ def label_video(video: str, out_file: Path, fast: bool = False) -> None:
         print("\nDetected operators:", ", ".join(sorted(operators)))
     if hits:
         print("Detected phrases:", ", ".join(sorted(hits.keys())))
+
 
     print("\nEnter comma-separated flags from:\n" + ", ".join(LABELS))
     raw = input("flags> ").strip()

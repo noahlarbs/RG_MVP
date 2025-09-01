@@ -1,12 +1,12 @@
 # Responsible Gaming Shorts — MVP
 
-A fast, local-first prototype that ingests **YouTube Shorts** (or uploaded .mp4), runs **ASR (Whisper)** and **OCR (Tesseract)**, and scores the content against a policy-grounded set of **Responsible Gaming** flags (e.g., *risk-free*, *chasing losses*, *offshore brands*, *missing 1-800-GAMBLER*).
+work in progress project ingests **YouTube Shorts** (or uploaded .mp4), runs **ASR (whisper)** and **OCR (tesseract)**, and scores  content against a set of **Responsible Gaming** policy flags (i.e,  *risk-free*, *chasing losses*, *offshore brands*, *missing 1-800-GAMBLER*).
 
 ## Features
 - Input: YouTube URL **or** upload .mp4
-- Pipeline: ffmpeg → Whisper (ASR) → Tesseract OCR → rule-based flags → scoring
+- pipe: ffmpeg → Whisper (ASR) → Tesseract OCR → rule-based flags → scoring
 - Output: Overall risk score (0–100), category breakdown, flags, transcript, OCR text, representative frames.
-- Ready-to-run in GitHub Codespaces via the included devcontainer
+- run in Codespaces via the incl. devcontainer
 
 ## Install
 
@@ -26,11 +26,11 @@ pip install -r requirements.txt
 
 ## Run
 
-YouTube may respond with **"Sign in to confirm you're not a bot"** unless `yt-dlp` uses your own authenticated cookies.
+YouTube may say  **"Sign in to confirm you're not a bot"** unless `yt-dlp` uses your own authenticated cookies.
 
-1. On your local machine, install a *cookies.txt* exporter in Chrome/Firefox and export cookies for `youtube.com` to a file (e.g., `youtube_cookies.txt`).
-2. Copy this file into the codespace (VS Code → *Explorer* → **Upload**…).
-3. In your venv terminal before launching the app:
+1. On your local machine, install a *cookies.txt* exporter in Chrome/Firefox and export cookies for `youtube.com` to a file 
+2. Copy/upload file into the codespace 
+3. In venv terminal before launching the app:
 
 ```bash
 export YTDLP_COOKIES=/workspaces/RG_MVP/youtube_cookies.txt  # adjust path
@@ -40,7 +40,7 @@ streamlit run app.py
 
 Paste a **YouTube Shorts** URL or upload a short `.mp4`.
 
-If the cookies expire and the bot-check message returns, re-export and replace the file.
+If the cookies expire and bot-check message returns, re-export and replace the file.
 
 ### Download clips without running the app
 
@@ -56,7 +56,21 @@ python download_clip.py "https://www.youtube.com/watch?v=abc123" --audio-only
 ### GitHub Codespaces
 
 ```markdown
-This repo includes a [devcontainer](.devcontainer) that installs `ffmpeg`, `tesseract-ocr`, and the Python requirements automatically. Open in Codespaces and you're ready to run `streamlit`.
+ repo includes a [devcontainer](.devcontainer) that installs `ffmpeg`, `tesseract-ocr`, and the Python requirements automatically. Run streamlit app thru codespaces or other text editor
+```
+
+## Dataset labeling and training **WORK IN PROGRESS**
+
+Use  helper script to build a labeled transcript/OCR dataset:
+
+```bash
+python scripts/label_dataset.py path/to/video.mp4 dataset.jsonl
+```
+
+Tune multi label classifier on the collected data:
+
+```bash
+python models/transcript_classifier.py dataset.jsonl model_out_dir --epochs 3
 ```
 
 ## Dataset labeling and training
@@ -76,6 +90,7 @@ python models/transcript_classifier.py dataset.jsonl model_out_dir --epochs 3
 ```
 
 ## Notes
+
 - This is a **rules-first** MVP with additional semantic phrase matching and optional logo detection.
 - `operators.json` seeds offshore/sweepstakes/licensed names for detection.
 - `flags.py` holds regexes and embedding-based phrase matchers; tune them as you observe false positives/negatives.
@@ -85,4 +100,12 @@ python models/transcript_classifier.py dataset.jsonl model_out_dir --epochs 3
 - Evidence PDF export with screenshots + policy citations
 - CLIP logo matching and in-car scene classifier
 - Instagram ingest via Graph API
+=======
+- This is a MVP with  semantic phrase matching and some logo detection, currently working on addig data to train the model via label_dataset.
+- `operators.json` seeds offshore/sweepstakes/licensed names for detection
+- `flags.py` holds regexes and embedding based phrase matchers; tune  as you observe false positives/negatives.
+- For Reels, can potentially use the **Instagram Graph API** hashtag search to fetch public media metadata and (when available) `media_url`. 
+
+## Current Proj Goals
+
 - Train a DistilBERT text classifier on labeled clips
